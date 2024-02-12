@@ -1,3 +1,5 @@
+#by David Ruiz a.k.a @viajatech 
+
 import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
