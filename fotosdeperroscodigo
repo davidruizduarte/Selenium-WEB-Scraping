@@ -1,0 +1,77 @@
+import os
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
+
+def save_dog_images(query="dogs", num_images=10):
+    # Desktop path (modify for your OS if needed)
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    images_folder = os.path.join(desktop_path, "dog_images")
+
+    # Create the folder if it doesn't exist
+    os.makedirs(images_folder, exist_ok=True) 
+
+    # Configure Firefox for headless operation (optional)
+    options = Options()
+    options.headless = True  
+
+    # Start the Firefox browser with the webdriver
+    driver = webdriver.Firefox(options=options)  
+
+    # Navigate to Google Images
+    driver.get("https://images.google.com/")
+
+    # Find the search box and enter the search term
+    search_box = driver.find_element(By.NAME, "q")
+    search_box.send_keys(query)
+    search_box.send_keys(Keys.ENTER)
+
+    # Collect image URLs
+    image_urls = []
+    scroll_pause_time = 1  # Seconds to pause while scrolling
+    last_height = driver.execute_script("return document.body.scrollHeight")
+
+    while len(image_urls) < num_images:
+        # Scroll down to load more images
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        import time
+        time.sleep(scroll_pause_time) 
+
+        # Update height for scrolling check
+        new_height = driver.execute_script("return document.body.scrollHeight")
+
+        # Stop scrolling if no more images load
+        if new_height == last_height:
+            break
+
+        last_height = new_height 
+
+        # Extract image elements
+        images = driver.find_elements(By.CSS_SELECTOR, "img.rg_i")
+
+        # Add image sources to the list
+        for img in images:
+            src = img.get_attribute("src")
+            if src and src.startswith("http") and src not in image_urls:
+                image_urls.append(src)
+
+    # Download and save the images
+    for i, url in enumerate(image_urls[:num_images]): 
+        try:
+            import requests
+            response = requests.get(url, stream=True)
+
+            file_path = os.path.join(images_folder, f"dog_image_{i+1}.jpg")
+            with open(file_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk: 
+                        f.write(chunk)
+
+        except Exception as e:
+            print(f"Error downloading image {i+1}: {e}")
+
+    driver.quit()
+
+# Execute the function to save dog images
+save_dog_images()
