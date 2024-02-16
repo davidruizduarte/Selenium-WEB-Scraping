@@ -1,4 +1,5 @@
 #by David Ruiz a.k.a @viajatech 
+#más tutoriales en; https://linktr.ee/viajatech
 
 import os
 from selenium import webdriver
